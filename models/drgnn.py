@@ -65,7 +65,7 @@ class ImplicitLayer(MessagePassing):
     def forward(self, x, edge_index, u0=None, bias_args=None):
         # You may store u0 in this object (ideal for static graphs)
         # or pass it as an argument (ideal for dynamic graph)
-        edge_weight = torch.ones(edge_index.size(1), dtype=x.dtype, device=x.device)
+        edge_weight = None
         u0 = u0 if u0 is not None else self.u0
 
         self.gamma = (
@@ -92,8 +92,8 @@ class ImplicitLayer(MessagePassing):
                 x, edge_index, edge_weight, self.max_iter, u0=u0, bias_args=bias_args
             )
         self.itr = itr
-        if (self.training) or (self.valid_u0):
-            self.u0 = u.clone().detach()
+        # if (self.training) or (self.valid_u0):
+        #     self.u0 = u.clone().detach()
         z = self.nonlin(u)
         return z
 
@@ -104,6 +104,8 @@ class ImplicitLayer(MessagePassing):
         return new_agg
 
     def message(self, x_j, edge_weight):
+        if edge_weight is None:
+            return x_j
         return edge_weight.view(-1, 1) * x_j
 
     def iterate(

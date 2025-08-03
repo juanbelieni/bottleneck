@@ -9,6 +9,7 @@ from common import Task, STOP, GNN_TYPE
 from attrdict import AttrDict
 from experiment import Experiment
 import torch
+import argparse
 
 override_params = {
     2: {'batch_size': 64, 'eval_every': 1000},
@@ -27,31 +28,30 @@ class Results:
         self.test_acc = test_acc
         self.epoch = epoch
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--depth", type=int, default=2)
+
+args = parser.parse_args()
+depth = args.depth
 
 if __name__ == '__main__':
 
     task = Task.NEIGHBORS_MATCH
     gnn_type = GNN_TYPE.DRGNN
     stopping_criterion = STOP.TRAIN
-    min_depth = 2
-    max_depth = 8
 
-    results_all_depths = {}
-    for depth in range(min_depth, max_depth + 1):
-        num_layers = depth + 1
-        args = main.get_fake_args(task=task, depth=depth, num_layers=num_layers, loader_workers=7,
-                                  type=gnn_type, stop=stopping_criterion,
-                                  no_activation=True, no_residual=True, no_layer_norm=False)
-        if depth in override_params:
-            for key, value in AttrDict(override_params[depth]).items():
-                args[key] = value
-        train_acc, test_acc, epoch = Experiment(args).run()
-        torch.cuda.empty_cache()
-        results_all_depths[depth] = Results(train_acc=train_acc, test_acc=test_acc, epoch=epoch)
-        print()
+    num_layers = depth + 1
+    args = main.get_fake_args(task=task, depth=depth, num_layers=num_layers, loader_workers=7,
+                                type=gnn_type, stop=stopping_criterion,
+                                no_activation=True, no_residual=True, no_layer_norm=False)
+    if depth in override_params:
+        for key, value in AttrDict(override_params[depth]).items():
+            args[key] = value
+    train_acc, test_acc, epoch = Experiment(args).run()
+    torch.cuda.empty_cache()
+    res = Results(train_acc=train_acc, test_acc=test_acc, epoch=epoch)
+    print()
 
     print(f'Task: {task}')
     print('depth, train_acc, test_acc, epoch, train_acc, test_acc, epoch,')
-    for depth in range(min_depth, max_depth + 1):
-        res = results_all_depths[depth]
-        print(f'{depth}, {res.train_acc}, {res.test_acc}, {res.epoch}')
+    print(f'{depth}, {res.train_acc}, {res.test_acc}, {res.epoch}')

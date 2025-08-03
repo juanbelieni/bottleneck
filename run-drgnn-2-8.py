@@ -1,3 +1,9 @@
+import collections
+import collections.abc
+for type_name in collections.abc.__all__:
+    setattr(collections, type_name, getattr(collections.abc, type_name))
+
+
 import main
 from common import Task, STOP, GNN_TYPE
 from attrdict import AttrDict
@@ -39,8 +45,6 @@ if __name__ == '__main__':
         if depth in override_params:
             for key, value in AttrDict(override_params[depth]).items():
                 args[key] = value
-        if args.depth in [2,3,4,5]:
-            continue
         train_acc, test_acc, epoch = Experiment(args).run()
         torch.cuda.empty_cache()
         results_all_depths[depth] = Results(train_acc=train_acc, test_acc=test_acc, epoch=epoch)

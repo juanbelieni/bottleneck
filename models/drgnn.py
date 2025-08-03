@@ -62,9 +62,10 @@ class ImplicitLayer(MessagePassing):
 
         pass
 
-    def forward(self, x, edge_index, edge_weight, u0=None, bias_args=None):
+    def forward(self, x, edge_index, u0=None, bias_args=None):
         # You may store u0 in this object (ideal for static graphs)
         # or pass it as an argument (ideal for dynamic graph)
+        edge_weight = torch.ones(edge_index.size(1), dtype=x.dtype, device=x.device)
         u0 = u0 if u0 is not None else self.u0
 
         self.gamma = (
@@ -171,10 +172,10 @@ class DRGNN(Module):
         self.batch_norm = BatchNorm1d(hidden_channels)
         pass
 
-    def forward(self, x, edge_index, edge_weight):
+    def forward(self, x, edge_index):
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.enc(x)
         # x = self.act( self.batch_norm( self.igl(x, edge_index, edge_weight) ) )
-        x = self.act(self.igl(x, edge_index, edge_weight))
+        x = self.act(self.igl(x, edge_index))
         x = self.dec(x)
         return x

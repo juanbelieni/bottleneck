@@ -12,8 +12,11 @@ import torch
 from torch.autograd import Function
 import torch.nn as nn
 from torch_geometric.nn import MessagePassing
-from functions import MonotoneNonlinear
 
+class MonotoneNonlinear(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        pass
 
 class ReLU(MonotoneNonlinear):
     def forward(self, z):
